@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add New Contact</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      #contact-form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        margin: 20px auto;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+      }
+      #image-preview {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 10px 0;
+        display: none;
+      }
+      button {
+        padding: 8px 16px;
+        margin-right: 10px;
+        cursor: pointer;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      .submit-btn {
+        background-color: #4caf50;
+      }
+      .cancel-btn {
+        background-color: #f44336;
+      }
+      .home-btn {
+        background-color: #2196f3;
+      }
+      .form-buttons {
+        margin-top: 15px;
+      }
+      .error-message {
+        color: #f44336;
+        font-size: 0.8em;
+        margin-top: -10px;
+        margin-bottom: 10px;
+      }
+      .success-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4caf50;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        transform: translateX(200%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .success-popup.show {
+        transform: translateX(0);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Add New Contact</h1>
+
+    <form id="contact-form">
+      <label>Profile Picture</label>
+      <input type="file" id="avatar" accept="image/*" />
+      <img id="image-preview" src="#" alt="Preview" />
+
+      <label>First Name</label>
+      <input type="text" id="firstname" required />
+      <div id="firstname-error" class="error-message"></div>
+
+      <label>Last Name</label>
+      <input type="text" id="lastname" required />
+      <div id="lastname-error" class="error-message"></div>
+
+      <label>Email</label>
+      <input type="email" id="email" />
+      <div id="email-error" class="error-message"></div>
+
+      <label>Phone</label>
+      <input type="tel" id="phone" />
+      <div id="phone-error" class="error-message"></div>
+
+      <div class="form-buttons">
+        <button type="submit" class="submit-btn">Save Contact</button>
+        <button type="button" id="cancel-btn" class="cancel-btn">Cancel</button>
+        <button type="button" id="home-btn" class="home-btn">Home</button>
+      </div>
+    </form>
+
+    <div id="success-popup" class="success-popup"></div>
+
+    <script>
+      // DOM elements
+      const contactForm = document.getElementById("contact-form");
+      const cancelBtn = document.getElementById("cancel-btn");
+      const homeBtn = document.getElementById("home-btn");
+      const avatarInput = document.getElementById("avatar");
+      const imagePreview = document.getElementById("image-preview");
+      
+      // Error elements
+      const firstnameError = document.getElementById("firstname-error");
+      const lastnameError = document.getElementById("lastname-error");
+      const emailError = document.getElementById("email-error");
+      const phoneError = document.getElementById("phone-error");
+
+      // Utility functions
+      function showPopup(message, duration = 3000) {
+        const popup = document.getElementById("success-popup");
+        popup.textContent = message;
+        popup.classList.add("show");
+        setTimeout(() => popup.classList.remove("show"), duration);
+      }
+
+      function generateId() {
+        return 'contact-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+      }
+
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+
+      function validatePhone(phone) {
+        const re = /^[0-9\-\+]{9,15}$/;
+        return re.test(phone);
+      }
+
+      function validateForm(firstname, lastname, email, phone) {
+        let isValid = true;
+        
+        // Reset error messages
+        firstnameError.textContent = '';
+        lastnameError.textContent = '';
+        emailError.textContent = '';
+        phoneError.textContent = '';
+
+        // Validate first name
+        if (!firstname) {
+          firstnameError.textContent = 'First name is required';
+          isValid = false;
+        }
+
+        // Validate last name
+        if (!lastname) {
+          lastnameError.textContent = 'Last name is required';
+          isValid = false;
+        }
+
+        // Validate email if provided
+        if (email && !validateEmail(email)) {
+          emailError.textContent = 'Please enter a valid email address';
+          isValid = false;
+        }
+
+        // Validate phone if provided
+        if (phone && !validatePhone(phone)) {
+          phoneError.textContent = 'Please enter a valid phone number';
+          isValid = false;
+        }
+
+        return isValid;
+      }
+
+      // Image preview functionality
+      avatarInput.addEventListener("change", function (e) {
+        if (e.target.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            imagePreview.src = event.target.result;
+            imagePreview.style.display = "block";
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      });
+
+      // Button event handlers
+      cancelBtn.addEventListener("click", function () {
+        if (confirm("Are you sure you want to cancel? Any unsaved changes will be lost.")) {
+          window.location.href = "index.html";
+        }
+      });
+
+      homeBtn.addEventListener("click", function () {
+        window.location.href = "index.html";
+      });
+
+      // Form submission
+      contactForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        // Get form values
+        const firstname = document.getElementById("firstname").value.trim();
+        const lastname = document.getElementById("lastname").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+
+        // Validate form
+        if (!validateForm(firstname, lastname, email, phone)) {
+          return;
+        }
+
+        try {
+          // Generate unique ID for the new contact
+          const contactId = generateId();
+
+          // Prepare contact data
+          const contactData = {
+            id: contactId,
+            firstname: firstname,
+            lastname: lastname,
+            email: email || null,
+            phone: phone || null,
+            avatar: imagePreview.src !== "#" 
+                    ? imagePreview.src 
+                    : "https://via.placeholder.com/60",
+            name: `${firstname} ${lastname}` // For compatibility with main page
+          };
+
+          // Save to localStorage
+          let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+          contacts.push(contactData);
+          localStorage.setItem("contacts", JSON.stringify(contacts));
+
+          // Set flag and redirect
+          localStorage.setItem("contactAdded", "true");
+          showPopup("Contact added successfully!");
+          
+          // Redirect after showing the popup
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+          
+        } catch (error) {
+          console.error("Error saving contact:", error);
+          showPopup("Failed to save contact. Please try again.");
+        }
+      });
+    </script>
+  </body>
+</html>

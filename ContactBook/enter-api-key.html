@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        div {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #333;
+        }
+        input {
+            padding: 10px;
+            width: 70%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        form {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div>Please enter a valid API Key.</div>
+    <form>
+        <input type="email" id="apiKey" name="apiKey"/>
+        <button id="submitApiKey">Submit</button>
+    </form>
+    <script>
+        let rootPath = "https://mysite.itvarsity.org/api/ContactBook/";
+        document.getElementById("submitApiKey").addEventListener("click", setApiKey);
+
+        function setApiKey(e){
+            e.preventDefault();
+            let apiKey = document.getElementById("apiKey").value;
+            fetch(rootPath + "controller/api-key/?apiKey=" + apiKey)
+            .then(function(response){
+                return response.text();
+            })
+            .then(function(data){
+                if (data == "1"){
+                    localStorage.setItem("apiKey", apiKey);
+                    window.open("index.html", "_self");
+                }
+                else{
+                    alert(data + " invalid API key entered");
+                }
+            })
+            .catch(function(error){
+                console.error("Error:", error);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Superhero Contacts</title>
+    <style>
+      :root {
+        --primary: #4361ee;
+        --success: #4cc9f0;
+        --warning: #f8961e;
+        --danger: #f94144;
+        --light: #f8f9fa;
+        --dark: #212529;
+      }
+
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: var(--dark);
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+      }
+
+      .contacts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .contact-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        position: relative;
+        cursor: pointer;
+        overflow: hidden;
+      }
+
+      .contact-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .contact-content {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        min-width: 0;
+      }
+
+      .contact-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #eee;
+        flex-shrink: 0;
+        background-color: #f0f0f0;
+      }
+
+      .contact-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .contact-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .contact-email,
+      .contact-phone {
+        font-size: 0.9rem;
+        color: #666;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .button-container {
+        display: flex;
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+
+      button {
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .btn-success {
+        background-color: var(--success);
+        color: white;
+      }
+
+      .btn-danger {
+        background-color: var(--danger);
+        color: white;
+      }
+
+      .btn-warning {
+        background-color: var(--warning);
+        color: white;
+      }
+
+      .contact-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .notification {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        padding: 1rem 1.5rem;
+        border-radius: 4px;
+        background-color: var(--success);
+        color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transform: translateX(200%);
+        transition: transform 0.3s ease-out;
+        z-index: 1000;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Superhero Contacts</h1>
+    </header>
+
+    <main>
+      <div class="contacts-container" id="contacts-container">
+    
+      </div>
+
+      <div class="button-container">
+        <button id="delete-btn" class="btn-danger">Delete-Contact</button>
+        <button id="add-btn" class="btn-success">Add New Contact</button>
+      </div>
+
+      <div id="notification" class="notification"></div>
+    </main>
+
+    <script>
+     
+    // Utility Functions
+       
+       
+      const Utils = {
+        generateId: () =>
+          `contact-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+
+        showNotification: (message, duration = 3000) => {
+          const notification = document.getElementById("notification");
+          notification.textContent = message;
+          notification.classList.add("show");
+
+          setTimeout(() => {
+            notification.classList.remove("show");
+          }, duration);
+        },
+
+        getFromStorage: (key) => {
+          try {
+            return JSON.parse(localStorage.getItem(key)) || [];
+          } catch {
+            return [];
+          }
+        },
+
+        saveToStorage: (key, data) => {
+          localStorage.setItem(key, JSON.stringify(data));
+        },
+      };
+
+      const DataStore = {
+        defaultContacts: [
+          {
+            id: "default-hulk",
+            name: "Hulk",
+            firstname: "Bruce",
+            lastname: "Banner",
+            email: "hulk.smash@avengers.com",
+            phone: "0845698752",
+            avatar:
+              "https://raw.githubusercontent.com/Simmie18/Images/main/images/hulk.jpg",
+          },
+          {
+            id: "default-spiderman",
+            name: "Spider-Man",
+            firstname: "Peter",
+            lastname: "Parker",
+            email: "peter.parker@avengers.com",
+            phone: "0785269845",
+            avatar:
+              "https://raw.githubusercontent.com/Simmie18/Images/main/images/Spidey.jpeg",
+          },
+        ],
+
+        getContacts: () => [
+          ...DataStore.defaultContacts,
+          ...Utils.getFromStorage("contacts"),
+        ],
+
+        saveContacts: (contacts) => {
+          Utils.saveToStorage("contacts", contacts);
+        },
+
+        deleteContact: (id) => {
+          const contacts = Utils.getFromStorage("contacts");
+          const updated = contacts.filter((c) => c.id !== id);
+          DataStore.saveContacts(updated);
+          return updated;
+        },
+      };
+
+      /**
+       * UI Controller
+       */
+      const UIController = {
+        renderContacts: () => {
+          const container = document.getElementById("contacts-container");
+          container.innerHTML = "";
+
+          // Get all contacts (default + saved)
+          const allContacts = DataStore.getContacts();
+
+          allContacts.forEach((contact, index) => {
+            const isDefault = contact.id.startsWith("default-");
+            const card = document.createElement("div");
+            card.className = "contact-card";
+
+            card.innerHTML = `
+              <div class="contact-content">
+                <img class="contact-avatar" src="${contact.avatar}" alt="${
+              contact.name
+            }" 
+                     onerror="this.src='https://i.imgur.com/0y0FbY3.png'">
+                <div class="contact-info">
+                  <div class="contact-name" title="${contact.firstname} ${
+              contact.lastname || ""
+            }">
+                    ${contact.firstname} ${contact.lastname || ""}
+                  </div>
+                  <div class="contact-email" title="${
+                    contact.email || "No email"
+                  }">
+                    ${contact.email || "No email"}
+                  </div>
+                  <div class="contact-phone" title="${
+                    contact.phone || "No phone"
+                  }">
+                    ${contact.phone || "No phone"}
+                  </div>
+                </div>
+              </div>
+              ${
+                !isDefault
+                  ? `
+                <div class="contact-actions">
+                  <button class="btn-warning edit-btn" data-id="${contact.id}">Edit</button>
+                  <button class="btn-danger delete-btn" data-id="${contact.id}">Delete</button>
+                </div>
+                `
+                  : ""
+              }
+            `;
+
+            card.addEventListener("click", () => {
+              console.groupCollapsed(`Contact #${index + 1}`);
+              console.log("Contact ID:", contact.id);
+              console.log("Name:", contact.firstname, contact.lastname);
+              console.log("Email:", contact.email);
+              console.log("Phone:", contact.phone);
+              console.groupEnd();
+            });
+
+            container.appendChild(card);
+          });
+
+          UIController.setupActionButtons();
+        },
+
+        setupActionButtons: () => {
+          document.querySelectorAll(".edit-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const id = btn.getAttribute("data-id");
+              window.location.href = `edit-contact.html?id=${id}`;
+            });
+          });
+
+          document.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const id = btn.getAttribute("data-id");
+
+              if (confirm("Delete this contact permanently?")) {
+                DataStore.deleteContact(id);
+                UIController.renderContacts();
+                Utils.showNotification("Contact deleted");
+              }
+            });
+          });
+        },
+
+        init: () => {
+          UIController.renderContacts();
+
+          document.getElementById("add-btn").addEventListener("click", () => {
+            window.location.href = "add-contact.html";
+          });
+
+          document
+            .getElementById("delete-btn")
+            .addEventListener("click", () => {
+              const contacts = Utils.getFromStorage("contacts");
+
+              if (contacts.length === 0) {
+                Utils.showNotification("No contacts to delete");
+                return;
+              }
+
+              contacts.pop();
+              DataStore.saveContacts(contacts);
+              UIController.renderContacts();
+              Utils.showNotification("Deleted last contact");
+            });
+
+          if (localStorage.getItem("contactAdded")) {
+            Utils.showNotification("Contact added successfully");
+            localStorage.removeItem("contactAdded");
+          }
+
+          if (localStorage.getItem("contactUpdated")) {
+            Utils.showNotification("Contact updated successfully");
+            localStorage.removeItem("contactUpdated");
+          }
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", UIController.init);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Contact</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      #contact-form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        margin: 20px auto;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+      }
+      .avatar-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .avatar-preview {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 10px;
+        border: 2px solid #ddd;
+      }
+      .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 10px 0;
+      }
+      .file-input-button {
+        padding: 8px 16px;
+        background-color: #2196f3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .file-input {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .remove-image-btn {
+        padding: 8px 16px;
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      button {
+        padding: 8px 16px;
+        margin-right: 10px;
+        cursor: pointer;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      .submit-btn {
+        background-color: #4caf50;
+      }
+      .cancel-btn {
+        background-color: #f44336;
+      }
+      .home-btn {
+        background-color: #2196f3;
+      }
+      .form-buttons {
+        margin-top: 15px;
+      }
+      .error-message {
+        color: #f44336;
+        font-size: 0.8em;
+        margin-top: -10px;
+        margin-bottom: 10px;
+      }
+      .success-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4caf50;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        transform: translateX(200%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .success-popup.show {
+        transform: translateX(0);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Edit Contact</h1>
+    
+    <form id="contact-form">
+      <div class="avatar-container">
+        <img id="avatar-preview" class="avatar-preview" src="" alt="Profile Picture">
+        <div class="file-input-wrapper">
+          <button type="button" class="file-input-button">Change Picture</button>
+          <input type="file" id="avatar-input" class="file-input" accept="image/*">
+        </div>
+        <button type="button" id="remove-image-btn" class="remove-image-btn">Remove Picture</button>
+      </div>
+      
+      <input type="hidden" id="contact-id">
+      
+      <label>First Name</label>
+      <input type="text" id="firstname" required>
+      <div id="firstname-error" class="error-message"></div>
+      
+      <label>Last Name</label>
+      <input type="text" id="lastname" required>
+      <div id="lastname-error" class="error-message"></div>
+      
+      <label>Email</label>
+      <input type="email" id="email">
+      <div id="email-error" class="error-message"></div>
+      
+      <label>Phone</label>
+      <input type="tel" id="phone">
+      <div id="phone-error" class="error-message"></div>
+      
+      <div class="form-buttons">
+        <button type="submit" class="submit-btn">Save Changes</button>
+        <button type="button" id="cancel-btn" class="cancel-btn">Cancel</button>
+        <button type="button" id="home-btn" class="home-btn">Home</button>
+      </div>
+    </form>
+
+    <div id="success-popup" class="success-popup"></div>
+
+    <script>
+      // Utility functions
+      function showPopup(message, duration = 3000) {
+        const popup = document.getElementById("success-popup");
+        popup.textContent = message;
+        popup.classList.add("show");
+        setTimeout(() => popup.classList.remove("show"), duration);
+      }
+
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+
+      function validatePhone(phone) {
+        const re = /^[0-9\-\+]{9,15}$/;
+        return re.test(phone);
+      }
+
+      function validateForm(firstname, lastname, email, phone) {
+        let isValid = true;
+        
+        // Reset error messages
+        document.getElementById("firstname-error").textContent = '';
+        document.getElementById("lastname-error").textContent = '';
+        document.getElementById("email-error").textContent = '';
+        document.getElementById("phone-error").textContent = '';
+
+        // Validate first name
+        if (!firstname) {
+          document.getElementById("firstname-error").textContent = 'First name is required';
+          isValid = false;
+        }
+
+        // Validate last name
+        if (!lastname) {
+          document.getElementById("lastname-error").textContent = 'Last name is required';
+          isValid = false;
+        }
+
+        // Validate email if provided
+        if (email && !validateEmail(email)) {
+          document.getElementById("email-error").textContent = 'Please enter a valid email address';
+          isValid = false;
+        }
+
+        // Validate phone if provided
+        if (phone && !validatePhone(phone)) {
+          document.getElementById("phone-error").textContent = 'Please enter a valid phone number';
+          isValid = false;
+        }
+
+        return isValid;
+      }
+
+      function updateGeneratedAvatar() {
+        const firstname = document.getElementById("firstname").value;
+        const lastname = document.getElementById("lastname").value;
+        const avatarPreview = document.getElementById("avatar-preview");
+        const avatarInput = document.getElementById("avatar-input");
+        
+        // Only update if no custom image is set
+        if (!avatarInput.files.length && (!avatarPreview.src || avatarPreview.src.includes('ui-avatars.com'))) {
+          const initials = (firstname ? firstname.charAt(0) : '') + (lastname ? lastname.charAt(0) : '');
+          if (initials) {
+            avatarPreview.src = `https://ui-avatars.com/api/?name=${
+              encodeURIComponent((firstname || '') + ' ' + (lastname || ''))
+            }&background=random`;
+          } else {
+            avatarPreview.src = 'https://via.placeholder.com/100';
+          }
+        }
+      }
+
+      // Load contact data when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        // Get contact ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const contactId = urlParams.get('id');
+        
+        if (!contactId) {
+          alert('No contact ID specified!');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // Store the ID in a hidden field
+        document.getElementById('contact-id').value = contactId;
+        
+        // Load contact data
+        const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+        const contact = contacts.find(c => c.id === contactId);
+        
+        if (contact) {
+          document.getElementById('firstname').value = contact.firstname || '';
+          document.getElementById('lastname').value = contact.lastname || '';
+          document.getElementById('email').value = contact.email || '';
+          document.getElementById('phone').value = contact.phone || '';
+          
+          // Set avatar preview
+          const avatarPreview = document.getElementById('avatar-preview');
+          if (contact.avatar) {
+            avatarPreview.src = contact.avatar;
+          } else {
+            updateGeneratedAvatar();
+          }
+        } else {
+          alert('Contact not found!');
+          window.location.href = 'index.html';
+        }
+
+        // Update generated avatar when names change
+        document.getElementById('firstname').addEventListener('input', updateGeneratedAvatar);
+        document.getElementById('lastname').addEventListener('input', updateGeneratedAvatar);
+      });
+
+      // Handle image upload
+      const avatarInput = document.getElementById('avatar-input');
+      avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            document.getElementById('avatar-preview').src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Handle remove image
+      document.getElementById('remove-image-btn').addEventListener('click', function() {
+        avatarInput.value = '';
+        updateGeneratedAvatar();
+      });
+
+      // Navigation buttons
+      document.getElementById('cancel-btn').addEventListener('click', function() {
+        if(confirm('Are you sure you want to cancel? All changes will be lost.')) {
+          window.location.href = 'index.html';
+        }
+      });
+
+      document.getElementById('home-btn').addEventListener('click', function() {
+        window.location.href = 'index.html';
+      });
+
+      // Form submission
+      document.getElementById('contact-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form values
+        const firstname = document.getElementById("firstname").value.trim();
+        const lastname = document.getElementById("lastname").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+
+        // Validate form
+        if (!validateForm(firstname, lastname, email, phone)) {
+          return;
+        }
+
+        const contactId = document.getElementById('contact-id').value;
+        const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+        const contactIndex = contacts.findIndex(c => c.id === contactId);
+        
+        if (contactIndex === -1) {
+          alert('Error: Contact not found!');
+          return;
+        }
+
+        // Prepare updated contact data
+        const updatedContact = {
+          id: contactId,
+          firstname: firstname,
+          lastname: lastname,
+          email: email || null,
+          phone: phone || null,
+          avatar: contacts[contactIndex].avatar, // Keep existing by default
+          name: `${firstname} ${lastname}` // For compatibility with main page
+        };
+
+        // Handle avatar updates
+        const avatarFile = avatarInput.files[0];
+        const avatarPreview = document.getElementById('avatar-preview');
+        
+        if (avatarFile) {
+          // New image uploaded
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            updatedContact.avatar = event.target.result;
+            saveContact(updatedContact, contacts, contactIndex);
+          };
+          reader.readAsDataURL(avatarFile);
+        } else if (avatarPreview.src.includes('ui-avatars.com') || avatarPreview.src.includes('via.placeholder.com')) {
+          // Using generated avatar
+          updatedContact.avatar = null;
+          saveContact(updatedContact, contacts, contactIndex);
+        } else {
+          // Keep existing avatar
+          saveContact(updatedContact, contacts, contactIndex);
+        }
+      });
+
+      function saveContact(contact, contacts, contactIndex) {
+        try {
+          contacts[contactIndex] = contact;
+          localStorage.setItem('contacts', JSON.stringify(contacts));
+          localStorage.setItem('contactUpdated', 'true');
+          showPopup('Contact updated successfully!');
+          
+          // Redirect after showing the popup
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
+        } catch (error) {
+          console.error('Error saving contact:', error);
+          showPopup('Failed to update contact. Please try again.');
+        }
+      }
+    </script>
+  </body>
+</html>
